@@ -82,9 +82,12 @@ func WaitAndTerminate(logger cometlog.Logger, services []cometservice.Service, p
 		panic(fmt.Errorf("error opening PID file: %s. %w", pidFilePath, err))
 	}
 	_, err = pidFile.Write([]byte(fmt.Sprintf("%d\n", os.Getpid())))
-	pidFile.Close()
 	if err != nil {
+		_ = pidFile.Close()
 		panic(fmt.Errorf("error writing to lock file: %s. %w", pidFilePath, err))
+	}
+	if err := pidFile.Close(); err != nil {
+		panic(fmt.Errorf("error closing PID file: %s. %w", pidFilePath, err))
 	}
 	cometos.TrapSignal(logger, func() {
 		if err := os.Remove(pidFilePath); err != nil {
